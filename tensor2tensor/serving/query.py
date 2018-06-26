@@ -36,7 +36,7 @@ flags.DEFINE_string("servable_name", None, "Name of served model.")
 flags.DEFINE_string("problem", None, "Problem name.")
 flags.DEFINE_string("data_dir", None, "Data directory, for vocab files.")
 flags.DEFINE_string("t2t_usr_dir", None, "Usr dir for registrations.")
-flags.DEFINE_string("inputs_once", None, "Query once with this input.")
+flags.DEFINE_string("test_data", None, "Query once with this input.")
 flags.DEFINE_integer("timeout_secs", 10, "Timeout for query.")
 
 # For Cloud ML Engine predictions.
@@ -84,8 +84,15 @@ def main(_):
   problem.get_hparams(hparams)
   request_fn = make_request_fn()
   while True:
-    inputs = FLAGS.inputs_once if FLAGS.inputs_once else input(">> ")
-    outputs = serving_utils.predict([inputs], problem, request_fn)
+    if FLAGS.inputs_once:
+      inputs = []
+      with open(FLAGS.inputs_once) as f:
+        for line in f:
+          _, text = line.rsplit().split(',', maxsplit=1)
+          inputs.append(text)
+    inputs = FLAGS.inputs_once if inputs else input(">> ")
+    outputs = serving_utils.predict(inputs, problem, request_fn)
+    print(outputs)
     outputs, = outputs
     output, score = outputs
     print_str = """
