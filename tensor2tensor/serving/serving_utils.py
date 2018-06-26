@@ -31,10 +31,18 @@ from tensorflow_serving.apis import prediction_service_pb2
 
 
 
+#def _make_example(input_ids, feature_name="inputs"):
+#  features = {
+#      feature_name:
+#          tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
+#  }
+#  return tf.train.Example(features=tf.train.Features(feature=features))
+
 def _make_example(input_ids, feature_name="inputs"):
   features = {
       feature_name:
-          tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids))
+          tf.train.Feature(int64_list=tf.train.Int64List(value=input_ids)),
+      "targets":tf.train.Feature(int64_list=tf.train.Int64List(value=[5]))
   }
   return tf.train.Example(features=tf.train.Features(feature=features))
 
@@ -72,11 +80,11 @@ def make_grpc_request_fn(servable_name, server, timeout_secs):
             [ex.SerializeToString() for ex in examples], shape=[len(examples)]))
     response = stub.Predict(request, timeout_secs)
     outputs = tf.make_ndarray(response.outputs["outputs"])
-    scores = tf.make_ndarray(response.outputs["scores"])
-    assert len(outputs) == len(scores)
+    #scores = tf.make_ndarray(response.outputs["scores"])
+    #assert len(outputs) == len(scores)
     return [{
         "outputs": outputs[i],
-        "scores": scores[i]
+        "scores": 0
     } for i in range(len(outputs))]
 
   return _make_grpc_request
